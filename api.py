@@ -83,5 +83,18 @@ class PodioApi:
         print message
         return message
 
+    def appendFile(self, itemID, fileName, fileData):
+        """
+            Sube un archivo a PODIO, y lo asocia a un item específico como adjunto.
+
+            fileData: Es un objeto de tipo 'file' de python, abierto en modo binario y con permisos de lectura.
+        """
+        fileData.seek(0) #En caso que el lector del archivo abierto no esté al comienzo
+        message = self._client.Files.create(fileName, fileData)
+        message2 = self._client.Files.attach(message['id'], 'item', itemID)
+        return message2
+
+
+
 
 
