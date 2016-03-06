@@ -43,6 +43,7 @@ class Hook(models.Model):
     )
     name = models.CharField(max_length=32, primary_key=True)
     application = models.ForeignKey(Aplicacion, on_delete=models.CASCADE)
+    field = models.CharField(max_length=16, null=True, blank=True)
     module = models.CharField(max_length=32)
     trigger = models.CharField(max_length=16, choices=HOOK_TYPES)
     hook_id = models.CharField(max_length=32)
@@ -51,9 +52,20 @@ class Hook(models.Model):
         api = api.PodioApi(self.application_id)
         url = 'http://104.131.143.133/app/podio/hooks/%s/' % self.name
         attributes = {'url': url, 'type': self.trigger}
-        response = api._client.Hook.create('app', self.application_id, attributes) 
-        hook_id = response['hook_id']
+        if self.field is not None:
+            ref_type = 'app_field'
+            ref_id = self.field
+        else:
+            ref_type = 'app'
+            ref_id = self.application_id
+        response = api._client.Hook.create(ref_type, ref_id, attributes) 
+        self.hook_id = response['hook_id']
         super(Hook, self).save(*args, **kwargs)
+    def delete(self, *args, **kwargs):
+        from . import api
+        api = api.PodioApi(self.application_id)
+        api._client.Hook.delete(self.hook_id)
+        super(Hook, self).delete(*args, **kwargs)
 
 
     

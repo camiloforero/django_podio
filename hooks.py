@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Module containing the HookDispatcher class and its custom exception
+"""
 import importlib
-from podioHooks import mailEntrevista
 
 class HookException(Exception):
+    """
+    Simple exception specialized for hook errors
+    """
     pass
 
-class HookDispatcher:
+class HookDispatcher(object):
     """
         This class is in charge of loading the right module that should handle a PODIO hook and returning it to the view so it can use it further.
     """
@@ -17,10 +22,8 @@ class HookDispatcher:
         self.module = importlib.import_module('.%s' % module, 'podioHooks')
 
     def test(self):
-        
+        """
+        Prints instance variables to see it is working correctly
+        """
         print self.hookName
         print self.module
-
-
-
-
