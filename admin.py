@@ -9,7 +9,7 @@ class AplicacionAdmin(admin.ModelAdmin):
 
 @admin.register(Hook)
 class HookAdmin(admin.ModelAdmin):
-    list_display = ('name', 'application', 'trigger', 'module')
-    readonly_fields = ('hook_id', )
+    list_display = ('name', 'application', 'trigger', 'module', 'uses')
+    readonly_fields = ('hook_id', 'uses')
 
 # Register your models here.

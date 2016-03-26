@@ -44,6 +44,8 @@ class HookView(View):
             logger.debug('success')
             dispatcher.module.run(hook.application_id, params)
             dispatcher.test()
+            hook.uses = hook.uses + 1
+            hook.save()
             return HttpResponse('success') #TODO modificar
         
 
