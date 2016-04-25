@@ -1,12 +1,15 @@
 # coding=utf-8
+from __future__ import unicode_literals
 from django.db import models
+from . import settings
 import inspect
 import field_types
 
 class Aplicacion(models.Model):
     """Esta clase representa una aplicación de PODIO. 
     """
-    nombre = models.CharField(max_length=32, unique=True)
+    nombre = models.CharField(max_length=128, unique=True)
+    workspace = models.CharField("Espacio de trabajo al cual pertenece esta aplicación", max_length=32)
     app_id = models.CharField(max_length=8, primary_key=True)
     app_token = models.CharField(max_length=32, help_text=u"Escribe acá el token de la aplicación. Éste lo puedes encontrar en PODIO dentro de la parte de desarrolladores. Alternativamente, escribe tu token personal si quieres que las acciones que hace esta aplicación se hagan en tu nombre")
     link = models.URLField()
@@ -17,11 +20,9 @@ class Aplicacion(models.Model):
             from . import api
             api = api.PodioApi(self.app_id, self.app_token)
             data = api.getAppInfo()
-            self.nombre = data['config']['name'] #TODO: Agregar el nombre del espacio de trabajo en el que se encuentra la aplicación
+            self.nombre = data['config']['name'] + ' - ' + self.workspace#TODO: Agregar el nombre del espacio de trabajo en el que se encuentra la aplicación
             self.link = data['url']
-            super(Aplicacion, self).save(*args, **kwargs)
-        else:
-            super(Aplicacion, self).save(*args, **kwargs)
+        super(Aplicacion, self).save(*args, **kwargs)
             
     class Meta:
         verbose_name_plural = "aplicaciones"
@@ -47,6 +48,7 @@ class Hook(models.Model):
     module = models.CharField(max_length=32)
     trigger = models.CharField(max_length=16, choices=HOOK_TYPES)
     hook_id = models.CharField(max_length=32)
+    hook_url = models.CharField(max_length=128)
     uses = models.PositiveIntegerField("Número de veces que ha sido usado este hook", default=0, blank=True)
     def __unicode__(self):
         return self.name
@@ -56,9 +58,9 @@ class Hook(models.Model):
         except Hook.DoesNotExist:
             from . import api
             api = api.PodioApi(self.application_id)
-            url = 'http://104.131.143.133/app/podio/hooks/%s/' % self.name
-            attributes = {'url': url, 'type': self.trigger}
-            if self.field is not None:
+            self.hook_url = 'http://104.131.143.133/app/%s/%s/' % (settings.HOOK_URL, self.name)
+            attributes = {'url': self.hook_url, 'type': self.trigger}
+            if self.field is not None and self.field is not "":
                 ref_type = 'app_field'
                 ref_id = self.field
             else:

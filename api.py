@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
+import pprint
 from pypodio2 import api
 
 from django.utils.html import strip_tags
@@ -34,7 +36,7 @@ class PodioApi(object):
 
     def getAppInfo(self):
         """
-        Returns raw information of the api object's application
+        Returns raw information of the api object's application, as a Python dictionary.
         """
         data = self._client.Application.find(self.app_id)
         return data
@@ -97,10 +99,10 @@ class PodioApi(object):
         else:
             key_type = "field_id"
 
-        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, nested, no_html)}) for field in item["fields"]])
+        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, nested, no_html, external_id=external_id)}) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
-    def getFieldValue(self, field, nested=False, no_html=False):
+    def getFieldValue(self, field, nested=False, no_html=False, external_id=True):
         """
         Gets the value of a field from its raw JSON data
 
@@ -123,7 +125,10 @@ class PodioApi(object):
                 return itemID
             else:
                 data = self._client.Item.find(int(itemID))
-                item = self.makeDict(data, nested=True)
+                if not external_id:
+                    item = self.make_dict(data, nested=True, external_id=external_id)
+                else:
+                    item = self.makeDict(data, nested=True)
                 return item
         elif field["type"] == "text":
             text = field["values"][0]["value"]
@@ -138,10 +143,9 @@ class PodioApi(object):
 
     def updateItem(self, item, values):
         """Mini Wrapper sobre la API de PODIO"""
-        print item
-        print values
+        print 'Updating item: ' + unicode(item)
+        item = int(item) #Importante: Para evitar que se caiga la api de PODIO más adelante
         message = self._client.Item.update(item, {'fields':values})
-        print message
         return message
 
     def uploadFile(self, fileName, fileData):
@@ -201,6 +205,7 @@ class PodioApi(object):
             origin_item_id: The item_id of the original item from which the values will be taken
             target_app_id: The app_id of the application on which the new item will be created
             field_conversor: A tuple that pairs together the (field_id)s from the origin application to the destination application.
+            extra_data: Represents data that is not present in the origin application but that should be added to the destination application, such as category fields, or default names. They can be always the same, or they can be guessed somehow from the existing fields
         """
         source_item = self.get_item(origin_item_id, external_id=False)
         if extra_data is None:
