@@ -1,5 +1,6 @@
 # encoding=utf-8
 from __future__ import unicode_literals
+from django.core.validators import validate_email
 
 def dictSwitch(oldDict, transformer, related_transformer=None, ignore_unknown=False):
     """
@@ -33,8 +34,18 @@ def hyphen_to_underscore(oldDict):
         newDict[key.replace('-', '_')] = value
     return newDict
 
-def flatten_item(item):
+def flatten_dict(dct):
     """
     This function transforms a complex item, as returned by the PODIO api, into a simpler, flat one
     """
-    pass #not sure if it is even necessary
+    ans = {}
+    for key, value in dct.iteritems():
+        ans[key] = value["value"]
+    return ans  
+
+def retrieve_email(value, item):
+    try:
+        validate_email(value)
+        return value
+    except:
+        return item['values'][int(value)]['value']

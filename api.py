@@ -167,11 +167,11 @@ class PodioApi(object):
 
             fileData: Es un objeto de tipo 'file' de python, abierto en modo binario y con permisos de lectura.
         """
-        message = self.createFile(fileName, fileData)
+        itemID = int(itemID)
+        message = self.uploadFile(fileName, fileData)
         print 'printing message 2'
         print '%s, %s, %s' % (message['file_id'], 'item', itemID)
-        self._client.Files.attach(message['file_id'], 'item', itemID)
-        print 'acabó'
+        message2 = self._client.Files.attach(message['file_id'], 'item', itemID)
         print message2
         return message2
 
@@ -188,8 +188,6 @@ class PodioApi(object):
 
     def comment(self, commentable_type, commentable_id, attributes):
         attributes = json.dumps(attributes)
-        print "Se escribió un nuevo comentario" 
-        print attributes
         return self._client.transport.POST(url="/comment/%s/%s/" % (commentable_type, commentable_id),
             body = attributes, type='application/json')
 
@@ -214,7 +212,12 @@ class PodioApi(object):
             destination_dict = extra_data
         try:
             for origin, destination in field_conversor:
-                source_field = source_item["values"][origin]
+                try:
+                    origin = int(origin)
+                    source_field = source_item["values"][origin]
+                except ValueError:
+                    related_id, field_id = origin.split('#')
+                    source_field = source_item["values"][int(related_id)]["value"]["values"][int(field_id)]
                 if source_field['type'] == "image":
                     new_value = []
                     for value in source_field['value']:
@@ -233,7 +236,7 @@ class PodioApi(object):
         self.comment(
             'item', 
             origin_item_id,
-            {'value': 'Se ha copiado el EP exitosamente'}
+            {'value': 'Se ha copiado el EP al espacio nuevo de PODIO exitosamente en la direccion %s' % new_item['link']}
         )
         return new_item
         #make new item
