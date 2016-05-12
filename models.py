@@ -58,7 +58,7 @@ class Hook(models.Model):
         except Hook.DoesNotExist:
             from . import api
             api = api.PodioApi(self.application_id)
-            self.hook_url = 'http://104.131.143.133/app/%s/%s/' % (settings.HOOK_URL, self.name)
+            self.hook_url = '%s/%s/%s/' % (settings.DOMAIN, settings.HOOK_URL, self.name)
             attributes = {'url': self.hook_url, 'type': self.trigger}
             if self.field is not None and self.field is not "":
                 ref_type = 'app_field'

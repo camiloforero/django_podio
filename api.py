@@ -3,14 +3,11 @@ from __future__ import unicode_literals
 import json
 import pprint
 from pypodio2 import api
+from . import settings
 
 from django.utils.html import strip_tags
 
 class PodioApi(object):
-
-    CLIENT_ID = "natco2015"
-    CLIENT_SECRET = "6FHzzKdpWDz3UpBJzxRgaIHM88wqQZR6eIN2Q9v31UbdvqWvl9fnZL4Xo3xpROfy"
-
 
     def __init__(self, app_id, app_token=None, client=False):
         self.app_id = app_id
@@ -26,13 +23,13 @@ class PodioApi(object):
         if app_token is None:
             from . import models
             app_token = models.Aplicacion.objects.get(app_id=self.app_id).app_token
-        return api.OAuthAppClient(self.CLIENT_ID, self.CLIENT_SECRET, self.app_id, app_token)
+        return api.OAuthAppClient(settings.CLIENT_ID, settings.CLIENT_SECRET, self.app_id, app_token)
 
     def _get_user_client(self):
         """
         Gets a client item from pypodio, from the app_id given to the podioApi object when it was created. Optionally it receives an app_token; in that case it doesn't need to fetch it from the database
         """
-        return api.OAuthClient(self.CLIENT_ID, self.CLIENT_SECRET, 'camilo.forero@aiesec.net', 'cr2rx6tS')
+        return api.OAuthClient(settings.CLIENT_ID, settings.CLIENT_SECRET, settings.USER, settings.PASSWORD)
 
     def getAppInfo(self):
         """

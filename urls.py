@@ -13,7 +13,5 @@ urlpatterns = [
     url(r'^app/(?P<appID>\d+)/items/$', views.ver_items, name='ver_items'),
     url(r'^app/(?P<appID>\d+)/items/(?P<itemID>\d+)/$', views.ver_item, name='ver_item'),
     url(r'^hooks/(?P<hookName>\w+)/$', csrf_exempt( views.HookView.as_view() ), name='hooks'),
-
-
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
 
