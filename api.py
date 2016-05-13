@@ -108,7 +108,13 @@ class PodioApi(object):
             no_html: Defines whether HTML will be stripped or not
         """
         if field["type"] == "category":
-            return field["values"][0]["value"]["text"]
+            if field["config"]["settings"]["multiple"]:
+                values = []
+                for category in field["values"]:
+                    values.append(category["value"]["text"])
+                return values
+            else:
+                return field["values"][0]["value"]["text"]
         elif field["type"] == "image":
             values = []
             for image in field['values']:
