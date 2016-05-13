@@ -2,7 +2,7 @@
 """
 Module containing the HookDispatcher class and its custom exception
 """
-from . import hooks
+import importlib
 
 class HookException(Exception):
     """
@@ -17,7 +17,7 @@ class HookDispatcher(object):
 
     def __init__(self, hookName, module):
         self.hookName = hookName
-        self.module = getattr(hooks, module)
+        self.module = importlib.import_module('.%s' % module, 'django_podio.hook_modules')
 
     def test(self):
         """

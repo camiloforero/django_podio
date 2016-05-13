@@ -183,7 +183,16 @@ class PodioApi(object):
         
 
 
+    def find_referenceable_items(self, field_id, **kwargs):
+        """
+        Used to find possible items for a given application field.It searches the relevant apps for items matching the given text
+        """
+        return self._client.transport.GET(url="/item/field/%s/find" % field_id, **kwargs)
+
     def comment(self, commentable_type, commentable_id, attributes):
+        """
+        Comments an item. This one is made to be similar to the methods in the official API, but as they don't have a comment Area it is here instead
+        """
         attributes = json.dumps(attributes)
         return self._client.transport.POST(url="/comment/%s/%s/" % (commentable_type, commentable_id),
             body = attributes, type='application/json')

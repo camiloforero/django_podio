@@ -19,12 +19,12 @@ def ver_item(request, appID, itemID):
 
 class HookView(View):
     def get(self, request, *args, **kwargs):
-        hook = models.Hook.objects.get(name=kwargs['hookName'])
+        hook = models.Hook.objects.get(pk=kwargs['hookName'])
         dispatcher = hooks.HookDispatcher(kwargs['hookName'], hook.module)
         dispatcher.test()
         return HttpResponse('success %s' % kwargs['hookName'])
     def post(self, request, *args, **kwargs):
-        hook = models.Hook.objects.get(name=kwargs['hookName'])
+        hook = models.Hook.objects.get(pk=kwargs['hookName'])
         dispatcher = hooks.HookDispatcher(kwargs['hookName'], hook.module)
         params = request.POST
         if params['type'] == 'hook.verify':
