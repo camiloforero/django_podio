@@ -7,7 +7,7 @@ def run(appID, params, hook=None):
     item = podioApi.get_item(params['item_id'], external_id=False)
     print item
     transformer = {
-        '118632836#117779491':'118634506',#Area
+        '118632836#124721552':'127894715',#Area
         '118632836#117701833':'119050124',#TMP, TLP o EB
     }
     new_dict = tools.dictSwitch(item['values'], {}, transformer, ignore_unknown = True)

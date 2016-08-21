@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import json
 import pprint
+from bs4 import BeautifulSoup
 from pypodio2 import api
 from . import settings
 
@@ -62,12 +63,17 @@ class PodioApi(object):
         item = self.makeDict(data, no_html=no_html)
         return item
 
-    def get_item(self, itemID, no_html=False, external_id=True):
+    def get_item(self, itemID, no_html=False, external_id=True, depth=1, version=1):
         """
         Returns a dictionary with a PODIO item's type, and all its values
+        itemID: The unique PODIO Item ID of the item that needs to be retrieved
+        no_html: If true, all html code will either be deleted or converted to ODT format
+        external_id: Whether the external_id or the field_id will be used as keys for the item values
+        depth: How deep will the request go down the rabbit hole following related items and retrieving their values
+        version: does nothing at the moment
         """
         data = self._client.Item.find(int(itemID))
-        item = self.make_dict(data, no_html=no_html, external_id=external_id)
+        item = self.make_dict(data, no_html=no_html, external_id=external_id, depth=depth, version=version)
         return item
 
     def getRawItem(self, itemID):
@@ -85,26 +91,27 @@ class PodioApi(object):
         dictionary = dict([(field["external_id"], self.getFieldValue(field, nested, no_html)) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
-    def make_dict(self, item, external_id=True, nested=False, no_html=False):
+    def make_dict(self, item, external_id=True, no_html=False, depth=1):
         """
         Creates a dictionary with the external_id of the item's fields ad keys, and their values as the dictionary values. This second versions allows to choose between the field_id or the external_id for the dictionary's key, and adds the field type to the generated dictionary.
         Params:
             item: The item that is being retrieved
+            depth: the number of levels that related apps will be followed
         """
         if external_id:
             key_type = "external_id"
         else:
             key_type = "field_id"
 
-        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, nested, no_html, external_id=external_id)}) for field in item["fields"]])
+        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, no_html, external_id=external_id, depth=depth)}) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
-    def getFieldValue(self, field, nested=False, no_html=False, external_id=True):
+    def getFieldValue(self, field, no_html=False, external_id=True, depth=1):
         """
         Gets the value of a field from its raw JSON data
 
         Params:
-            nested: If there is a relationship field and nested is set to true, it will fetch that item's dictionary data from the PODIO api and use it as the value. If false, it will use the item_id value
+            depth: If there is a relationship field and depth has a value greater than zero, it will fetch that item's dictionary data from the PODIO api and use it as the value. If false, it will use the item_id value
             no_html: Defines whether HTML will be stripped or not
         """
         if field["type"] == "category":
@@ -124,19 +131,31 @@ class PodioApi(object):
             return field["values"][0]
         elif field["type"] == "app":
             itemID = field["values"][0]["value"]["item_id"]
-            if nested:
+            if depth<=0:
                 return itemID
             else:
                 data = self._client.Item.find(int(itemID))
                 if not external_id:
-                    item = self.make_dict(data, nested=True, external_id=external_id)
+                    item = self.make_dict(data, external_id=external_id, depth=depth-1)
                 else:
                     item = self.makeDict(data, nested=True)
                 return item
         elif field["type"] == "text":
             text = field["values"][0]["value"]
             if no_html and field["config"]["settings"]["format"] == 'html':
-                text = strip_tags(text)
+                print text.encode('utf-8')
+                html_text = BeautifulSoup(text, "html5lib")
+                for p_tag in html_text.find_all('p'):
+                    p_tag.unwrap()
+                print html_text
+                for br_tag in html_text.find_all('br'):
+                    br_tag.name="text:line-break"
+                html_text.find('html').unwrap()
+                html_text.find('head').unwrap()
+                html_text.find('body').unwrap()
+                text = unicode(html_text)
+                print text.encode('ascii', 'ignore')
+                #text = strip_tags(text)
             return text
         elif field["type"] == "embed":
             return field["values"][0]["embed"]["url"]
