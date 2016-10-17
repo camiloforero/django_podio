@@ -45,7 +45,7 @@ def dictSwitch(oldDict, transformer, related_transformer=None, ignore_unknown=Fa
             newDict[value] = oldDict[int(keys[0])]['value']['values'][int(keys[1])]
         elif len(keys) == 3:
             newDict[value] = oldDict[int(keys[0])]['value']['values'][int(keys[1])]['value']['values'][int(keys[2])]
-    print newDict
+    #print newDict
     return newDict
 
 def hyphen_to_underscore(oldDict):

@@ -13,5 +13,5 @@ def run(appID, params, hook=None):
     hook = hook.email_document_hook
     podioApi = api.PodioApi(appID, client=hook.podio_user_client)
     item = podioApi.get_item(params['item_id'], external_id=False, no_html=True, depth=2)
-    email_document(item, hook)
+    email_document.email_document(item, hook, podioApi)
         

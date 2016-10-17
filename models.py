@@ -43,7 +43,7 @@ class Hook(models.Model):
         ('item.update', 'item.update'),
         ('item.delete', 'item.delete'),
     )
-    path = models.CharField(help_text="The last parameter of the url this hook will have. FOr example, co.aiesec.org/podio/hooks/*path*", max_length=32, primary_key=True)
+    name = models.CharField(help_text="The last parameter of the url this hook will have. FOr example, co.aiesec.org/podio/hooks/*name*", max_length=32, primary_key=True)
     label = models.CharField(help_text="A human readable name", max_length=64)
     application = models.ForeignKey(Aplicacion, on_delete=models.CASCADE)
     field = models.CharField(help_text="If empty, this will be an app hook. If not, it will be an app_field hook. One main difference is that with an item.update trigger, the frist one will be triggered every time anything is modified, while the second will trigger only when the specific field is modificed", max_length=16, null=True, blank=True)
@@ -63,11 +63,11 @@ class Hook(models.Model):
             raise ValidationError({'module':"%s" % e})
     def save(self, *args, **kwargs):
         try:
-            Hook.objects.get(pk=self.path)
+            Hook.objects.get(pk=self.name)
         except Hook.DoesNotExist:
             from . import api
             api = api.PodioApi(self.application_id)
-            self.hook_url = '%s/%s/%s/' % (settings.DOMAIN, settings.HOOK_URL, self.path)
+            self.hook_url = '%s/%s/%s/' % (settings.DOMAIN, settings.HOOK_URL, self.name)
             attributes = {'url': self.hook_url, 'type': self.trigger}
             if self.field is not None and self.field is not "":
                 ref_type = 'app_field'

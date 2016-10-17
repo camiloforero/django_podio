@@ -25,8 +25,8 @@ def run(appID, params, hook=None):
         
         fileName = 'Certificado Voluntariado - %s' % data['title']
         email = mailApi.MailApi('mailCertificado')
-        status = email.send_mail('igcdp@aiesecandes.org', 
-            [item['values']['email'], 'igv@aiesecandes.org', 'im@aiesecandes.org'], data, 
+        status = email.send_mail('igv@aiesecandes.org', 
+            [item['values']['email'], 'igv.pk@aiesecandes.org', 'igv.opk@aiesecandes.org'], data, 
             attachments=[{'filename': fileName + fileExtension, 'data': jd.read()}, ]
             )
         jd.seek(0)

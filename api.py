@@ -12,6 +12,7 @@ class PodioApi(object):
 
     def __init__(self, app_id, app_token=None, client=False):
         self.app_id = app_id
+        self.client = client
         if client:
             self._client = self._get_user_client()
         else:
@@ -41,11 +42,11 @@ class PodioApi(object):
 
     def getAllItems(self):
         """
-        Returns all items from the application of the api object
+        Returns up to 500 items from the application of the api object
         """
         data = self._client.Item.filter(
             int(self.app_id), {
-                'limit': 400,
+                'limit': 500,
 #                'filters':[{
 #                    "key":"96943879", #En este pedazo se está filtrando sobre un campo, se quiere coger sólo a los
 #                    "values":[1],
@@ -53,6 +54,35 @@ class PodioApi(object):
             },
         )["items"]
         fields = [self.makeDict(item) for item in data]
+        return fields
+
+    def get_filtered_items(self, filters, depth=1):
+        """
+        Returns items filtered according to certain parameters. See the PODIO API for more information on a filter syntax. TODO: how does this syntax exactly work?
+        params:
+        filters: a list of all the filters that will be applied
+        """
+        data = self._client.Item.filter(
+            int(self.app_id), {
+                'limit': 500,
+                'filters':filters,
+            },
+        )["items"]
+        fields = [self.make_dict(item, external_id=False, depth=depth) for item in data]
+        return fields
+
+    def get_items_by_view(self, view_id):
+        """
+        Returns all items belonging to a certain view, given by its ID. As all new methods, it automatically asks for the external ID
+        params: 
+        filters: a list of all the filters that will be applied
+        """
+        data = self.filter_by_view(
+            int(self.app_id), int(view_id),{
+                'limit': 400,
+            },
+        )["items"]
+        fields = [self.make_dict(item, external_id=False) for item in data]
         return fields
 
     def getItem(self, itemID, no_html=False):
@@ -91,7 +121,7 @@ class PodioApi(object):
         dictionary = dict([(field["external_id"], self.getFieldValue(field, nested, no_html)) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
-    def make_dict(self, item, external_id=True, no_html=False, depth=1):
+    def make_dict(self, item, external_id=True, no_html=False, depth=1, version='v1'):
         """
         Creates a dictionary with the external_id of the item's fields ad keys, and their values as the dictionary values. This second versions allows to choose between the field_id or the external_id for the dictionary's key, and adds the field type to the generated dictionary.
         Params:
@@ -160,7 +190,7 @@ class PodioApi(object):
         elif field["type"] == "embed":
             return field["values"][0]["embed"]["url"]
         else:
-            print field["type"]
+            #print field["type"]
             return field["values"][0]["value"]
 
     def updateItem(self, item, values):
@@ -180,6 +210,7 @@ class PodioApi(object):
             
 
         """
+        print "Attempting to upload file..."
         fileData.seek(0) #En caso que el lector del archivo abierto no esté al comienzo
         return self._client.Files.create(fileName, fileData)
 
@@ -191,7 +222,7 @@ class PodioApi(object):
         """
         itemID = int(itemID)
         message = self.uploadFile(fileName, fileData)
-        print 'printing message 2'
+        print 'File upload completed successfully'
         print '%s, %s, %s' % (message['file_id'], 'item', itemID)
         message2 = self._client.Files.attach(message['file_id'], 'item', itemID)
         print message2
@@ -206,21 +237,6 @@ class PodioApi(object):
         """
         return self._client.Files.copy(file_id)
         
-
-
-    def find_referenceable_items(self, field_id, **kwargs):
-        """
-        Used to find possible items for a given application field.It searches the relevant apps for items matching the given text
-        """
-        return self._client.transport.GET(url="/item/field/%s/find" % field_id, **kwargs)
-
-    def comment(self, commentable_type, commentable_id, attributes):
-        """
-        Comments an item. This one is made to be similar to the methods in the official API, but as they don't have a comment Area it is here instead
-        """
-        attributes = json.dumps(attributes)
-        return self._client.transport.POST(url="/comment/%s/%s/" % (commentable_type, commentable_id),
-            body = attributes, type='application/json')
 
     def create_item(self, attributes, app_id = None, silent=False, hook=True):
         if app_id is None:
@@ -272,3 +288,26 @@ class PodioApi(object):
         return new_item
         #make new item
         #return return code
+
+############PODIO API Originals##############
+#These methods are here because there is no equivalent in the official PODIO API. They follow the same style, and eventually they will be added to the official branch with a pull request.
+
+    def find_referenceable_items(self, field_id, **kwargs):
+        """
+        Used to find possible items for a given application field.It searches the relevant apps for items matching the given text
+        """
+        return self._client.transport.GET(url="/item/field/%s/find" % field_id, **kwargs)
+
+    def comment(self, commentable_type, commentable_id, attributes):
+        """
+        Comments an item. This one is made to be similar to the methods in the official API, but as they don't have a comment Area it is here instead
+        """
+        attributes = json.dumps(attributes)
+        return self._client.transport.POST(url="/comment/%s/%s/" % (commentable_type, commentable_id),
+            body = attributes, type='application/json')
+
+    def filter_by_view(self, app_id, view_id, attributes, **kwargs):
+        if not isinstance(attributes, dict):
+            raise TypeError('Must be of type dict')
+        attributes = json.dumps(attributes)
+        return self._client.transport.POST(url="/item/app/%d/filter/%d/" % (app_id, view_id), body=attributes, type="application/json", **kwargs)
