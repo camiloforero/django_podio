@@ -42,7 +42,13 @@ def dictSwitch(oldDict, transformer, related_transformer=None, ignore_unknown=Fa
     for key, value in related_transformer.iteritems():
         keys = key.split('#')
         if len(keys) == 2:
-            newDict[value] = oldDict[int(keys[0])]['value']['values'][int(keys[1])]
+            try:
+                newDict[value] = oldDict[int(keys[0])]['value']['values'][int(keys[1])]
+            except KeyError as e:
+                print oldDict
+                print keys[0]
+                print keys[1]
+                print e
         elif len(keys) == 3:
             newDict[value] = oldDict[int(keys[0])]['value']['values'][int(keys[1])]['value']['values'][int(keys[2])]
     #print newDict

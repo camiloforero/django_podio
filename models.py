@@ -77,7 +77,7 @@ class Hook(models.Model):
                 ref_id = self.application_id
             response = api._client.Hook.create(ref_type, ref_id, attributes) 
             self.hook_id = response['hook_id']
-            super(Hook, self).save(*args, **kwargs)
+        super(Hook, self).save(*args, **kwargs)
     def delete(self, *args, **kwargs):
         from . import api
         api = api.PodioApi(self.application_id)

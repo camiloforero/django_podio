@@ -68,10 +68,10 @@ class PodioApi(object):
                 'filters':filters,
             },
         )["items"]
-        fields = [self.make_dict(item, external_id=False, depth=depth) for item in data]
+        fields = [self.make_dict(item, external_id=False, depth=depth, optimize=True) for item in data]
         return fields
 
-    def get_items_by_view(self, view_id):
+    def get_items_by_view(self, view_id, depth=1):
         """
         Returns all items belonging to a certain view, given by its ID. As all new methods, it automatically asks for the external ID
         params: 
@@ -79,10 +79,10 @@ class PodioApi(object):
         """
         data = self.filter_by_view(
             int(self.app_id), int(view_id),{
-                'limit': 400,
+                'limit': 500,
             },
         )["items"]
-        fields = [self.make_dict(item, external_id=False) for item in data]
+        fields = [self.make_dict(item, external_id=False, depth=depth, optimize=True) for item in data]
         return fields
 
     def getItem(self, itemID, no_html=False):
@@ -93,17 +93,16 @@ class PodioApi(object):
         item = self.makeDict(data, no_html=no_html)
         return item
 
-    def get_item(self, itemID, no_html=False, external_id=True, depth=1, version=1):
+    def get_item(self, itemID, no_html=False, external_id=True, depth=1):
         """
         Returns a dictionary with a PODIO item's type, and all its values
         itemID: The unique PODIO Item ID of the item that needs to be retrieved
         no_html: If true, all html code will either be deleted or converted to ODT format
         external_id: Whether the external_id or the field_id will be used as keys for the item values
         depth: How deep will the request go down the rabbit hole following related items and retrieving their values
-        version: does nothing at the moment
         """
         data = self._client.Item.find(int(itemID))
-        item = self.make_dict(data, no_html=no_html, external_id=external_id, depth=depth, version=version)
+        item = self.make_dict(data, no_html=no_html, external_id=external_id, depth=depth)
         return item
 
     def getRawItem(self, itemID):
@@ -121,22 +120,23 @@ class PodioApi(object):
         dictionary = dict([(field["external_id"], self.getFieldValue(field, nested, no_html)) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
-    def make_dict(self, item, external_id=True, no_html=False, depth=1, version='v1'):
+    def make_dict(self, item, external_id=True, no_html=False, depth=1, optimize=False):
         """
         Creates a dictionary with the external_id of the item's fields ad keys, and their values as the dictionary values. This second versions allows to choose between the field_id or the external_id for the dictionary's key, and adds the field type to the generated dictionary.
         Params:
             item: The item that is being retrieved
             depth: the number of levels that related apps will be followed
+            optimize: For application fields, defines whether it will query PODIO for each item, or preload all items in the destination app and get them from there.
         """
         if external_id:
             key_type = "external_id"
         else:
             key_type = "field_id"
 
-        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, no_html, external_id=external_id, depth=depth)}) for field in item["fields"]])
+        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, no_html, external_id=external_id, depth=depth, optimize=optimize)}) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
-    def getFieldValue(self, field, no_html=False, external_id=True, depth=1):
+    def getFieldValue(self, field, no_html=False, external_id=True, depth=1, optimize=False):
         """
         Gets the value of a field from its raw JSON data
 
@@ -161,14 +161,31 @@ class PodioApi(object):
             return field["values"][0]
         elif field["type"] == "app":
             itemID = field["values"][0]["value"]["item_id"]
+            appID = field["values"][0]["value"]["app"]["app_id"]
             if depth<=0:
                 return itemID
             else:
-                data = self._client.Item.find(int(itemID))
-                if not external_id:
-                    item = self.make_dict(data, external_id=external_id, depth=depth-1)
+                if optimize:#Si es necesario optimizar la carga del item
+                    try: #Intenta buscar la lista de items como un atributo en self
+                        items = getattr(self, str(appID))
+                    except AttributeError:
+                        #Como no los encontró, crea una nueva PodioAPI con la appID de destino y le pide los items
+                        nested_api = self.__class__(appID)
+                        items = nested_api.get_filtered_items(None, depth=depth-1)
+                        #Luego crea el atributo para que esta llamada no se repita
+                        setattr(self, str(appID), items) 
+                    #Ya teniendo a todos los items, busca entre la lista aquel cuya ID es igual al item ID de la referencia, y lo pone como valor del campo.
+                    item = None
+                    for i in items:
+                        if i["item"] == int(itemID):
+                            item = i
+                        
                 else:
-                    item = self.makeDict(data, nested=True)
+                    data = self._client.Item.find(int(itemID))
+                    if not external_id:
+                        item = self.make_dict(data, external_id=external_id, depth=depth-1)
+                    else:
+                        item = self.makeDict(data, nested=True)
                 return item
         elif field["type"] == "text":
             text = field["values"][0]["value"]

@@ -8,10 +8,10 @@ def run(appID, params, hook=None):
     item = podioApi.get_item(params['item_id'], external_id=False)
     if item['values'][120840533]['value'] == 'Si':
         transformer = [
-            ('120839833#120914599', 113795330), #Nombre del trainee
-            ('120839833#120836241', 113795334), #Email del trainee
-            ('120839833#120335070', 113795331), #EP Id, o EXPA Code
-            ('120839833#120335071', 113795337), #Opportunity ID
+            ('120839833#123889164', 113795330), #Nombre del trainee
+            ('120839833#123889167', 113795334), #Email del trainee
+            ('120839833#123889169', 113795331), #EP Id, o EXPA Code
+            ('120839833#123889170', 113795337), #Opportunity ID
             (120839834, 113795332), #Number of exchanges 
             (120839835, 113795335), #Skype ID
             (122096055, 113798817), #Tipo de documento
