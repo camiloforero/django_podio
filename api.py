@@ -170,7 +170,13 @@ class PodioApi(object):
                         items = getattr(self, str(appID))
                     except AttributeError:
                         #Como no los encontró, crea una nueva PodioAPI con la appID de destino y le pide los items
-                        nested_api = self.__class__(appID)
+                        if self.client:
+                            nested_api = self
+                        else:
+                            try:
+                                nested_api = self.__class__(appID)
+                            except: #TODO: Especificar la excepcion que es de tipo "DoesNotExist"
+                                raise Exception("Hubo un error creando el nuevo objeto 'PodioApi' para el item relacionado con app_id %s. Por favor agregar el app_id y el app_token de esa aplicacion a la base de datos" % appID)
                         items = nested_api.get_filtered_items(None, depth=depth-1)
                         #Luego crea el atributo para que esta llamada no se repita
                         setattr(self, str(appID), items) 
