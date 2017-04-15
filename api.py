@@ -11,6 +11,10 @@ from django.utils.html import strip_tags
 class PodioApi(object):
 
     def __init__(self, app_id, app_token=None, client=False):
+        """
+        params:
+        client: If true it authenticates as an application, if false it authenticates as the default user using the credentials stored in the settings file
+        """
         self.app_id = app_id
         self.client = client
         if client:
