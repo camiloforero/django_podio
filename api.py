@@ -97,7 +97,7 @@ class PodioApi(object):
         item = self.makeDict(data, no_html=no_html)
         return item
 
-    def get_item(self, itemID, no_html=False, external_id=True, depth=1):
+    def get_item(self, itemID, no_html=False, external_id=False, depth=1):
         """
         Returns a dictionary with a PODIO item's type, and all its values
         itemID: The unique PODIO Item ID of the item that needs to be retrieved
@@ -338,3 +338,6 @@ class PodioApi(object):
             raise TypeError('Must be of type dict')
         attributes = json.dumps(attributes)
         return self._client.transport.POST(url="/item/app/%d/filter/%d/" % (app_id, view_id), body=attributes, type="application/json", **kwargs)
+
+    def search_in_application_v2(self, app_id, **kwargs):
+        return self._client.transport.GET(url="/search/app/%d/v2/" % app_id, **kwargs)

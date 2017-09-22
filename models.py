@@ -10,7 +10,8 @@ class Aplicacion(models.Model):
     """Esta clase representa una aplicación de PODIO. 
     """
     nombre = models.CharField(max_length=128, unique=True)
-    workspace = models.CharField(help_text="Espacio de trabajo al cual pertenece esta aplicación", max_length=32)
+    workspace = models.CharField(help_text="Espacio de trabajo al cual pertenece esta aplicación", max_length=64)
+    organization = models.CharField(help_text="The organization this application belongs to", null=True, max_length=64)
     app_id = models.CharField(max_length=8, primary_key=True)
     app_token = models.CharField(max_length=32, help_text=u"Escribe acá el token de la aplicación. Éste lo puedes encontrar en PODIO dentro de la parte de desarrolladores. Alternativamente, escribe tu token personal si quieres que las acciones que hace esta aplicación se hagan en tu nombre")
     link = models.URLField()
