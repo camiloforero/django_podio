@@ -80,8 +80,13 @@ def retrieve_email(value, item):
         validate_email(value)
         return value
     except:
-        try:
-            return item['values'][int(value)]['value']
-        except ValueError:
+        if '#' in value:
             app_id, field_id = value.split("#")
-            return item['values'][int(app_id)]['value']['values'][int(field_id)]['value']
+            email = item['values'][int(app_id)]['value']['values'][int(field_id)]['value']
+        elif '$' in value:
+            field_id, subfield = value.split("$")
+            email = item['values'][int(field_id)]['value'][subfield][0]
+        else:
+            email = item['values'][int(value)]['value']
+        validate_email(email)
+        return email

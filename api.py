@@ -60,7 +60,7 @@ class PodioApi(object):
         fields = [self.makeDict(item) for item in data]
         return fields
 
-    def get_filtered_items(self, filters, depth=1):
+    def get_filtered_items(self, filters, depth=1, no_html=False):
         """
         Returns items filtered according to certain parameters. See the PODIO API for more information on a filter syntax. TODO: how does this syntax exactly work?
         params:
@@ -72,7 +72,7 @@ class PodioApi(object):
                 'filters':filters,
             },
         )["items"]
-        fields = [self.make_dict(item, external_id=False, depth=depth, optimize=True) for item in data]
+        fields = [self.make_dict(item, external_id=False, depth=depth, optimize=True, no_html=no_html) for item in data]
         return fields
 
     def get_items_by_view(self, view_id, depth=1):
@@ -137,7 +137,7 @@ class PodioApi(object):
         else:
             key_type = "field_id"
 
-        dictionary = dict([(field[key_type], {"type": field["type"], "value": self.getFieldValue(field, no_html, external_id=external_id, depth=depth, optimize=optimize)}) for field in item["fields"]])
+        dictionary = dict([(field[key_type], {"label":field["label"], "type": field["type"], "value": self.getFieldValue(field, no_html, external_id=external_id, depth=depth, optimize=optimize)}) for field in item["fields"]])
         return {'item': item["item_id"], 'values':dictionary}
 
     def getFieldValue(self, field, no_html=False, external_id=True, depth=1, optimize=False):
@@ -341,3 +341,12 @@ class PodioApi(object):
 
     def search_in_application_v2(self, app_id, **kwargs):
         return self._client.transport.GET(url="/search/app/%d/v2/" % app_id, **kwargs)
+
+#Widgets
+
+    def update_widget(self, widget_id, **kwargs):
+        return self._client.transport.PUT(url="/widget/%d/" % widget_id, **kwargs)
+
+    def get_widget(self, widget_id, **kwargs):
+        return self._client.transport.GET(url="/widget/%d/" % widget_id, **kwargs)
+
