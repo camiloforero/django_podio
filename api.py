@@ -66,12 +66,31 @@ class PodioApi(object):
         params:
         filters: a list of all the filters that will be applied
         """
-        data = self._client.Item.filter(
+        raw_data = self._client.Item.filter(
             int(self.app_id), {
                 'limit': 500,
                 'filters':filters,
             },
-        )["items"]
+        )
+        data = raw_data['items']
+        filtered = raw_data['filtered']
+        offset = 0
+        print(filtered)
+        while filtered > 500:
+            offset += 500
+            filtered -= 500
+            new_data = self._client.Item.filter(
+                int(self.app_id), {
+                    'limit': 500,
+                    'filters': filters,
+                    'offset': offset,
+                },
+            )
+            print(len(new_data['items']))
+            data.extend(new_data['items'])
+            
+            
+            
         fields = [self.make_dict(item, external_id=False, depth=depth, optimize=True, no_html=no_html) for item in data]
         return fields
 
