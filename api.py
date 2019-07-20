@@ -88,16 +88,16 @@ class PodioApi(object):
             )
             print(len(new_data['items']))
             data.extend(new_data['items'])
-            
-            
-            
+
+
+
         fields = [self.make_dict(item, external_id=False, depth=depth, optimize=True, no_html=no_html) for item in data]
         return fields
 
     def get_items_by_view(self, view_id, depth=1):
         """
         Returns all items belonging to a certain view, given by its ID. As all new methods, it automatically asks for the external ID
-        params: 
+        params:
         filters: a list of all the filters that will be applied
         """
         data = self.filter_by_view(
@@ -202,13 +202,13 @@ class PodioApi(object):
                                 raise Exception("Hubo un error creando el nuevo objeto 'PodioApi' para el item relacionado con app_id %s. Por favor agregar el app_id y el app_token de esa aplicacion a la base de datos" % appID)
                         items = nested_api.get_filtered_items(None, depth=depth-1)
                         #Luego crea el atributo para que esta llamada no se repita
-                        setattr(self, str(appID), items) 
+                        setattr(self, str(appID), items)
                     #Ya teniendo a todos los items, busca entre la lista aquel cuya ID es igual al item ID de la referencia, y lo pone como valor del campo.
                     item = None
                     for i in items:
                         if i["item"] == int(itemID):
                             item = i
-                        
+
                 else:
                     data = self._client.Item.find(int(itemID))
                     if not external_id:
@@ -219,18 +219,16 @@ class PodioApi(object):
         elif field["type"] == "text":
             text = field["values"][0]["value"]
             if no_html and field["config"]["settings"]["format"] == 'html':
-                print text.encode('utf-8')
+                print (text.encode('utf-8'))
                 html_text = BeautifulSoup(text, "html5lib")
                 for p_tag in html_text.find_all('p'):
                     p_tag.unwrap()
-                print html_text
                 for br_tag in html_text.find_all('br'):
                     br_tag.name="text:line-break"
                 html_text.find('html').unwrap()
                 html_text.find('head').unwrap()
                 html_text.find('body').unwrap()
                 text = unicode(html_text)
-                print text.encode('ascii', 'ignore')
                 #text = strip_tags(text)
             return text
         elif field["type"] == "embed":
@@ -241,7 +239,7 @@ class PodioApi(object):
 
     def updateItem(self, item, values):
         """Mini Wrapper sobre la API de PODIO"""
-        print 'Updating item: ' + unicode(item)
+        print ('Updating item: ' + unicode(item))
         item = int(item) #Importante: Para evitar que se caiga la api de PODIO más adelante
         message = self._client.Item.update(item, {'fields':values})
         return message
@@ -253,10 +251,10 @@ class PodioApi(object):
         fileData: un file de Python
 
         Returns: the dictionary returned by pypodio. It has a key, "file_id", where the ID of the newly uploaded file can be found.
-            
+
 
         """
-        print "Attempting to upload file..."
+        print("Attempting to upload file...")
         fileData.seek(0) #En caso que el lector del archivo abierto no esté al comienzo
         return self._client.Files.create(fileName, fileData)
 
@@ -268,10 +266,10 @@ class PodioApi(object):
         """
         itemID = int(itemID)
         message = self.uploadFile(fileName, fileData)
-        print 'File upload completed successfully'
-        print '%s, %s, %s' % (message['file_id'], 'item', itemID)
+        print('File upload completed successfully')
+        print('%s, %s, %s' % (message['file_id'], 'item', itemID))
         message2 = self._client.Files.attach(message['file_id'], 'item', itemID)
-        print message2
+        print(message2)
         return message2
 
     def copy_file(self, file_id):
@@ -282,7 +280,7 @@ class PodioApi(object):
         Returns: A dictionary. Its key, "file_id", contains the new id of the new, copied file.
         """
         return self._client.Files.copy(file_id)
-        
+
 
     def create_item(self, attributes, app_id = None, silent=False, hook=True):
         if app_id is None:
@@ -320,14 +318,14 @@ class PodioApi(object):
                 destination_dict[destination] = new_value
         except KeyError as e:
             self.comment(
-                'item', 
+                'item',
                 origin_item_id,
                 {'value': 'Ha habido un error con la llave %s (IM lo sabe interpretar :)  ) pero probablemente no están todos los campos que pide la aplicación nacional y por eso no se pudo crear.' % str(e)}
             )
             return 'Key Error: ' + str(e)
         new_item = self.create_item({"fields":destination_dict}, app_id = target_app_id)
         self.comment(
-            'item', 
+            'item',
             origin_item_id,
             {'value': 'Se ha copiado el EP al espacio nuevo de PODIO exitosamente en la direccion %s' % new_item['link']}
         )
@@ -368,4 +366,3 @@ class PodioApi(object):
 
     def get_widget(self, widget_id, **kwargs):
         return self._client.transport.GET(url="/widget/%d/" % widget_id, **kwargs)
-

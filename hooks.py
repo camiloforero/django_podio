@@ -23,5 +23,5 @@ class HookDispatcher(object):
         """
         Prints instance variables to see it is working correctly
         """
-        print self.hookName
-        print self.module
+        print(self.hookName)
+        print(self.module)

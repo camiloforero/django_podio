@@ -4,10 +4,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from . import settings
 import inspect
-import field_types
 
 class Aplicacion(models.Model):
-    """Esta clase representa una aplicación de PODIO. 
+    """Esta clase representa una aplicación de PODIO.
     """
     nombre = models.CharField(max_length=128, unique=True)
     workspace = models.CharField(help_text="Espacio de trabajo al cual pertenece esta aplicación", max_length=64)
@@ -25,7 +24,7 @@ class Aplicacion(models.Model):
             self.nombre = data['config']['name'] + ' - ' + self.workspace#TODO: Agregar el nombre del espacio de trabajo en el que se encuentra la aplicación
             self.link = data['url']
         super(Aplicacion, self).save(*args, **kwargs)
-            
+
     class Meta:
         verbose_name_plural = "aplicaciones"
 
@@ -76,7 +75,7 @@ class Hook(models.Model):
             else:
                 ref_type = 'app'
                 ref_id = self.application_id
-            response = api._client.Hook.create(ref_type, ref_id, attributes) 
+            response = api._client.Hook.create(ref_type, ref_id, attributes)
             self.hook_id = response['hook_id']
         super(Hook, self).save(*args, **kwargs)
     def delete(self, *args, **kwargs):
@@ -86,7 +85,7 @@ class Hook(models.Model):
         super(Hook, self).delete(*args, **kwargs)
 
 
-    
+
 
 
 # Create your models here.
